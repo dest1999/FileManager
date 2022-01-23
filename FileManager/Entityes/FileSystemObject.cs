@@ -20,7 +20,7 @@ namespace FileManager
         public abstract (bool, Exception) Rename(string newName);
         public abstract (bool, Exception) Copy(FileSystemObject destination);
         public abstract (bool, Exception) Move(FileSystemObject destination);
-        public abstract void Info();
+        public abstract List<string> Info();
 
         public abstract FileSystemObject Run(); //для папки переход в неё, для файла-запуск его или ассоциированного приложения
 

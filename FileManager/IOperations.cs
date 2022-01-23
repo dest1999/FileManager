@@ -13,7 +13,7 @@ namespace FileManager
         FileSystemObject Run();
         (bool, Exception) Copy(FileSystemObject destination);
         (bool, Exception) Move(FileSystemObject destination);
-        void Info();
+        List<string> Info();
         (bool, Exception) Create(string name);
     }
 }

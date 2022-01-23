@@ -10,12 +10,13 @@ namespace FileManager
 {
     internal class File : FileSystemObject
     {
+        public long Size { get => fileInfo.Length; }
         private FileInfo fileInfo;
+
         public File(string name)
         {
             fileInfo = new (name);
             Name = fileInfo.Name;//name only
-            //Parent = fileInfo.FullName;
             Parent = CurrentDirectory = fileInfo.DirectoryName;
         }
         public File()
@@ -64,14 +65,36 @@ namespace FileManager
             }
         }
 
-        //public override FileSystemObject GetParent()
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        public override void Info()
+        public override List<string> Info()
         {
-            throw new NotImplementedException();
+            List<string> returnList = new();
+            returnList.Add(Name);
+            returnList.Add(Size.ToString("N0") + " bytes");
+
+            if (fileInfo.Extension.ToLower() == ".txt")
+            {//if file is .txt
+                List<string> stringsFromFile = new();
+                using (var streamReader = fileInfo.OpenText())
+                {
+                    string str = "";
+                    while ((str = streamReader.ReadLine()) != null)
+                    {
+                        if (str.Length > 0)
+                        {
+                            stringsFromFile.Add(str);
+                        }
+                    }
+                }
+                returnList.Add("Strings in file: " + stringsFromFile.Count.ToString());
+
+                int wordsCount = 0;
+                foreach (var str in stringsFromFile)
+                {
+                    wordsCount += (from s in str.Split(' ') where s.Length > 0 select s).Count();
+                }
+                returnList.Add("Words in file: " + wordsCount);
+            }
+            return returnList;
         }
 
         public override (bool, Exception) Move(FileSystemObject destination)
@@ -85,7 +108,6 @@ namespace FileManager
             {
                 return (false, e);
             }
-            //throw new NotImplementedException();
         }
 
         public override (bool, Exception) Rename(string newName)

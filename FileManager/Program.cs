@@ -13,16 +13,17 @@ namespace FileManager
                                         leftPanelDirectory,
                                         rightPanelDirectory;
         private static ListView rightTree = new()
-                                {
-                                    Width = Dim.Fill(),
-                                    Height = Dim.Fill(),
-                                },
+        {
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+        },
                                 leftTree = new()
                                 {
                                     Width = Dim.Fill(),
                                     Height = Dim.Fill(),
-                                };
-
+                                },
+                                nowSelectedTree, inactiveTree;
+        private static IListDataSource inactiveDirectoryHolder;
         static void Main(string[] args)
         {
             //while (running != null)
@@ -74,7 +75,7 @@ namespace FileManager
             {
                 X = Pos.Right(renameButton),
                 Y = Pos.Percent(100) - 1,
-                Text = "NewF_ile",
+                Text = "NewFile",
                 TabStop = false
             };
             Button newFolderButton = new()
@@ -105,15 +106,89 @@ namespace FileManager
                 Text = "Move",
                 TabStop = false
             };
+            Button infoButton = new()
+            {
+                X = Pos.Right(moveButton),
+                Y = Pos.Percent(100) - 1,
+                Text = "Info",
+                TabStop = false
+            };
+            Button searchButton = new()
+            {
+                X = Pos.Right(infoButton),
+                Y = Pos.Percent(100) - 1,
+                Text = "Search",
+                TabStop = false
+            };
             renameButton.Clicked += RenameButton_Run;
             newFileButton.Clicked += NewFileButton_Clicked;
             newFolderButton.Clicked += NewFolderButton_Clicked;
             deleteButton.Clicked += DeleteButton_Clicked;
             copyButton.Clicked += CopyButton_Clicked;
             moveButton.Clicked += MoveButton_Clicked;
-
-            top.Add(leftPanel, rightPanel, renameButton, newFileButton, newFolderButton, deleteButton, copyButton, moveButton);
+            infoButton.Clicked += InfoButton_Clicked;
+            searchButton.Clicked += SearchButton_Clicked;
+            top.Add(leftPanel, rightPanel, renameButton, newFileButton, newFolderButton, deleteButton, copyButton, moveButton, infoButton, searchButton);
             Application.Run();
+        }
+
+        private static void SearchButton_Clicked()
+        {
+            TextField searchText = new("")
+            {
+                Width = Dim.Fill(),
+                Height = 1,
+                Y = Pos.Center(),
+            };
+
+            Button buttonOK = new("OK")
+            {
+                X = Pos.Center(),
+                Y = Pos.Bottom(searchText) + 1,
+            };
+
+            Button buttonCancel = new("Cancel")
+            {
+                X = Pos.Right(buttonOK) + 1,
+                Y = Pos.Bottom(searchText) + 1,
+            };
+
+            buttonCancel.Clicked += () => { Application.RequestStop(); };
+            buttonOK.Clicked += () => {
+                if (currentObjectSelection is Folder folder && !string.IsNullOrEmpty(searchText.Text.ToString()))
+                {
+                    (bool isSuccess, Exception e, IList searchResults) = folder.Search(searchText.Text.ToString()); //подумать и отрефакторить этот кортеж
+                    if (isSuccess)
+                    {
+                        nowSelectedTree.SetSource(searchResults);
+                    }
+                    else
+                    {
+                        ShowErrorMessage(e.Message);
+                    }
+                }
+                Application.RequestStop();
+            };
+            var dialog = new Dialog("Search", 40, 7, buttonOK, buttonCancel);
+
+            dialog.Add(searchText);
+
+            Application.Run(dialog);
+        }
+
+        private static void InfoButton_Clicked()
+        {
+            if (inactiveTree.TabStop)
+            {
+                inactiveTree.TabStop = false;
+                inactiveDirectoryHolder = inactiveTree.Source;
+                inactiveTree.SetSource(currentObjectSelection.Info());
+            }
+            else
+            {
+                inactiveTree.TabStop = true;
+                inactiveTree.Source = inactiveDirectoryHolder;
+            }
         }
 
         private static void MoveButton_Clicked()
@@ -137,13 +212,13 @@ namespace FileManager
             }
             else
             {
+                ForceUpdateBothPanels();
                 ShowErrorMessage(e.Message);
             }
-            //throw new NotImplementedException();
         }
 
         private static void CopyButton_Clicked()
-        {
+        {//TODO отрефакторить методы copy & move с учётом введения переменной nowSelectedTree
             bool isSuccess = true;
             Exception e = null;
             if (currentObjectSelection is FileSystemObject && !currentObjectSelection.headOfDirectory)
@@ -163,9 +238,9 @@ namespace FileManager
             }
             else
             {
+                ForceUpdateBothPanels();
                 ShowErrorMessage(e.Message);
             }
-
         }
 
         private static void DeleteButton_Clicked()
@@ -268,16 +343,7 @@ namespace FileManager
             Application.Run(dialog);
 
         }
-
-        private static void SelectedItemChanged(ListViewItemEventArgs obj)
-        {
-            GetChangeDirectoryes();//проверить нужен ли сдесь этот вызов
-            if (obj.Value is FileSystemObject fso)
-            {
-                currentObjectSelection = fso;
-            }
-        }
-
+        
         private static void RenameButton_Run()
         {
             TextField newName = new ("")
@@ -320,11 +386,32 @@ namespace FileManager
             Application.Run(dialog);
         }
 
+        private static void SelectedItemChanged(ListViewItemEventArgs obj)
+        {
+            if (rightTree.HasFocus)
+            {
+                nowSelectedTree = rightTree;
+                inactiveTree = leftTree;
+            }
+            else if (leftTree.HasFocus)
+            {
+                nowSelectedTree = leftTree;
+                inactiveTree = rightTree;
+            }
+
+            GetChangeDirectoryes();
+            if (obj.Value is FileSystemObject fso)
+            {
+                currentObjectSelection = fso;
+            }
+        }
+
         private static void RightTree_OpenSelectedItem(ListViewItemEventArgs obj)
         {
             OpenSelectedItem(rightTree, obj);
             GetChangeDirectoryes();
         }
+
         private static void LeftTree_OpenSelectedItem(ListViewItemEventArgs obj)
         {
             OpenSelectedItem(leftTree, obj);
