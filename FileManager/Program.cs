@@ -8,7 +8,6 @@ namespace FileManager
 {
     internal partial class Program
     {
-        //private static Action running = MainApp;
         public static FileSystemObject currentObjectSelection,
                                         leftPanelDirectory,
                                         rightPanelDirectory;
@@ -61,8 +60,8 @@ namespace FileManager
             leftTree.SelectedItemChanged += SelectedItemChanged;
             rightTree.SelectedItemChanged += SelectedItemChanged;
 
-            leftTree.SetSource(FolderMapping.GetFolderContent(new Folder(@"d:\2")));
-            rightTree.SetSource(FolderMapping.GetFolderContent(new Folder(@"d:\1") ));//TODO для отладки
+            leftTree.SetSource(FolderMapping.GetFolderContent(new Folder()));
+            rightTree.SetSource(FolderMapping.GetFolderContent(new Folder()));
 
             Button renameButton = new ()
             {
@@ -157,12 +156,17 @@ namespace FileManager
             buttonOK.Clicked += () => {
                 if (currentObjectSelection is Folder folder && !string.IsNullOrEmpty(searchText.Text.ToString()))
                 {
-                    (bool isSuccess, Exception e, IList searchResults) = folder.Search(searchText.Text.ToString()); //подумать и отрефакторить этот кортеж
-                    if (isSuccess)
+                    (bool isSuccess, Exception e, IList searchResults) = folder.Search(searchText.Text.ToString());
+                    if (isSuccess && searchResults.Count > 0)
                     {
                         nowSelectedTree.SetSource(searchResults);
                     }
-                    else
+                    else if(isSuccess)
+                    {
+                        ShowErrorMessage("Not found");
+                    }
+
+                    if (e != null)
                     {
                         ShowErrorMessage(e.Message);
                     }
@@ -218,7 +222,7 @@ namespace FileManager
         }
 
         private static void CopyButton_Clicked()
-        {//TODO отрефакторить методы copy & move с учётом введения переменной nowSelectedTree
+        {
             bool isSuccess = true;
             Exception e = null;
             if (currentObjectSelection is FileSystemObject && !currentObjectSelection.headOfDirectory)

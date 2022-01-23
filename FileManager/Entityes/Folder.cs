@@ -169,14 +169,25 @@ namespace FileManager
             List<FileSystemObject> searchResult = new();
             bool isSuccess = true;
 
-
-            foreach (var item in Directory.EnumerateDirectories (this.directoryInfo.FullName, searchFilename, SearchOption.AllDirectories))
+            try
             {
-                searchResult.Add(new Folder(item));
+                foreach (var item in Directory.EnumerateDirectories(this.directoryInfo.FullName, searchFilename, SearchOption.AllDirectories))
+                {
+                    searchResult.Add(new Folder(item));
+                }
+                foreach (var item in Directory.EnumerateFiles(this.directoryInfo.FullName, searchFilename, SearchOption.AllDirectories))
+                {
+                    searchResult.Add(new File(item));
+                }
             }
-            foreach (var item in Directory.EnumerateFiles(this.directoryInfo.FullName, searchFilename, SearchOption.AllDirectories))
+            catch (Exception e)
             {
-                searchResult.Add(new Folder(item));
+                if(searchResult.Count == 0)
+                {//если сразу получили exception
+                    isSuccess = false;
+                }
+
+                return(isSuccess, e, searchResult);
             }
 
             return (isSuccess, null, searchResult);

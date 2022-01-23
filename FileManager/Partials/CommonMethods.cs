@@ -29,8 +29,23 @@ namespace FileManager
 
         private static void GetChangeDirectoryes()
         {
-            leftPanelDirectory = leftTree.Source.ToList()[0] as FileSystemObject;
-            rightPanelDirectory = rightTree.Source.ToList()[0] as FileSystemObject;
+            if (leftTree.Source.ToList().Count > 0)
+            {
+                leftPanelDirectory = leftTree.Source.ToList()[0] as FileSystemObject;
+            }
+            else
+            {
+                leftTree.SetSource(FolderMapping.GetFolderContent());
+            }
+
+            if (rightTree.Source.ToList().Count > 0)
+            {
+                rightPanelDirectory = rightTree.Source.ToList()[0] as FileSystemObject;
+            }
+            else
+            {
+                rightTree.SetSource(FolderMapping.GetFolderContent());
+            }
         }
 
     }
