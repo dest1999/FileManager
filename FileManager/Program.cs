@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using TemplateEngine.Docx;
 using Terminal.Gui;
 
 namespace FileManager
@@ -60,8 +61,8 @@ namespace FileManager
             leftTree.SelectedItemChanged += SelectedItemChanged;
             rightTree.SelectedItemChanged += SelectedItemChanged;
 
-            leftTree.SetSource(FolderMapping.GetFolderContent(new Folder()));
-            rightTree.SetSource(FolderMapping.GetFolderContent(new Folder()));
+            leftTree.SetSource(FolderMapping.GetFolderContent());
+            rightTree.SetSource(FolderMapping.GetFolderContent());
 
             Button renameButton = new ()
             {
@@ -119,6 +120,13 @@ namespace FileManager
                 Text = "Search",
                 TabStop = false
             };
+            Button diskStatisticButton = new()
+            {
+                X = Pos.Right(searchButton),
+                Y = Pos.Percent(100) - 1,
+                Text = "DiskS_tat",
+                TabStop = false
+            };
             renameButton.Clicked += RenameButton_Run;
             newFileButton.Clicked += NewFileButton_Clicked;
             newFolderButton.Clicked += NewFolderButton_Clicked;
@@ -127,8 +135,19 @@ namespace FileManager
             moveButton.Clicked += MoveButton_Clicked;
             infoButton.Clicked += InfoButton_Clicked;
             searchButton.Clicked += SearchButton_Clicked;
-            top.Add(leftPanel, rightPanel, renameButton, newFileButton, newFolderButton, deleteButton, copyButton, moveButton, infoButton, searchButton);
+            diskStatisticButton.Clicked += DiskStatisticButton_Clicked;
+            top.Add(leftPanel, rightPanel, renameButton, newFileButton, newFolderButton, deleteButton, copyButton, moveButton, infoButton, searchButton, diskStatisticButton);
             Application.Run();
+        }
+
+        private static void DiskStatisticButton_Clicked()
+        {
+            //make copy of template
+            var rootDir = new DirectoryInfo(currentObjectSelection.FullName).Root;
+            var drive = new DriveInfo(rootDir.ToString());
+            var valuesToTemplate = new Content(
+                new FieldContent("FreeSpace", drive.AvailableFreeSpace.ToString())
+                );
         }
 
         private static void SearchButton_Clicked()
@@ -173,7 +192,7 @@ namespace FileManager
                 }
                 Application.RequestStop();
             };
-            var dialog = new Dialog("Search", 40, 7, buttonOK, buttonCancel);
+            var dialog = new Dialog("Search folder", 40, 7, buttonOK, buttonCancel);
 
             dialog.Add(searchText);
 
@@ -222,7 +241,7 @@ namespace FileManager
         }
 
         private static void CopyButton_Clicked()
-        {
+        {//TODO отрефакторить методы copy & move с учётом введения переменной nowSelectedTree
             bool isSuccess = true;
             Exception e = null;
             if (currentObjectSelection is FileSystemObject && !currentObjectSelection.headOfDirectory)
