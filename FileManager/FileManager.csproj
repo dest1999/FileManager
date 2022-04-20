@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Templation\FMTemplate.docx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <None Update="FMTemplate.docx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

@@ -142,12 +142,19 @@ namespace FileManager
 
         private static void DiskStatisticButton_Clicked()
         {
-            //make copy of template
+            var newDiskStat = "diskinfo.docx";
+            System.IO.File.Copy("FMTemplate.docx", newDiskStat, true);
             var rootDir = new DirectoryInfo(currentObjectSelection.FullName).Root;
             var drive = new DriveInfo(rootDir.ToString());
+
             var valuesToTemplate = new Content(
                 new FieldContent("FreeSpace", drive.AvailableFreeSpace.ToString())
                 );
+
+            using var outputDoc = new TemplateProcessor(newDiskStat).SetRemoveContentControls(true);
+            outputDoc.FillContent(valuesToTemplate);
+            outputDoc.SaveChanges();
+
         }
 
         private static void SearchButton_Clicked()
