@@ -17,12 +17,12 @@ namespace FileManager
             Width = Dim.Fill(),
             Height = Dim.Fill(),
         },
-                                leftTree = new()
-                                {
-                                    Width = Dim.Fill(),
-                                    Height = Dim.Fill(),
-                                },
-                                nowSelectedTree, inactiveTree;
+        leftTree = new()
+        {
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+        },
+        nowSelectedTree, inactiveTree;
         private static IListDataSource inactiveDirectoryHolder;
         static void Main(string[] args)
         {
@@ -144,11 +144,23 @@ namespace FileManager
         {
             var newDiskStat = "diskinfo.docx";
             System.IO.File.Copy("FMTemplate.docx", newDiskStat, true);
-            var rootDir = new DirectoryInfo(currentObjectSelection.FullName).Root;
-            var drive = new DriveInfo(rootDir.ToString());
+
+            List<TableRowContent> diskRows = new ();
+
+            foreach (var disk in DriveInfo.GetDrives())
+            {
+                diskRows.Add(new TableRowContent(new List<FieldContent>()
+                { 
+                    new FieldContent("driveName", disk.Name),
+                    new FieldContent("freeSpace", (disk.AvailableFreeSpace / 1_000_000).ToString())
+                }));
+            }
 
             var valuesToTemplate = new Content(
-                new FieldContent("FreeSpace", drive.AvailableFreeSpace.ToString())
+                new FieldContent("computername", Environment.MachineName),
+                new FieldContent("username", Environment.UserName),
+                new FieldContent("dateTimeStamp", DateTime.Now.ToString()),
+                TableContent.Create("diskStatTable", diskRows)
                 );
 
             using var outputDoc = new TemplateProcessor(newDiskStat).SetRemoveContentControls(true);
