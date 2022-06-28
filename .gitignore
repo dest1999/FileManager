@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/FileManager/TODO.txt
+/FileManager.docx
+/FileManager/ClassDiagram1.cd
+/FileManager/FileManager.PNG
